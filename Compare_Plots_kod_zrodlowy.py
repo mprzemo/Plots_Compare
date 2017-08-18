@@ -28,15 +28,15 @@ class Window(Frame):
 
         Style().configure("TFrame", background="#333")
 
-        # Defining of entry and text fields
+        # Defining entrys, lables and text fields
         self.path1 = Entry(self, width=50)
         self.path1.place(x=10, y=10)
 
         self.path2 = Entry(self, width=50)
         self.path2.place(x=10, y=35)
 
-        self.startFromEntry = Entry(self)
-        self.startFromEntry.place(x=450, y=10)
+        self.startFromEntry = Entry(self, width=5)
+        self.startFromEntry.place(x=550, y=10)
 
         self.plot1PathText = Text(self, height=3, width=75)
         self.plot1PathText.place(x=620, y=670)
@@ -46,6 +46,18 @@ class Window(Frame):
 
         self.lb = Listbox(self, height=15, width=100)
         self.lb.place(x=620, y=740)
+
+        self.numberOfPlotsText = Text(self, height=1, width=5)
+        self.numberOfPlotsText.place(x=790, y=10)
+
+        self.currentPlotsText = Text(self, height=1, width=5)
+        self.currentPlotsText.place(x=930, y=10)
+
+        numberOfPlotsLabel = Label(self, text="Nuber of plots:")
+        numberOfPlotsLabel.place(x=700, y=10)
+
+        currentPlotsLabel = Label(self, text="Current plot:")
+        currentPlotsLabel.place(x=850, y=10)
 
         # Defining buttons
         previousButton = Button(self, text="Previous", command=
@@ -71,12 +83,13 @@ class Window(Frame):
                                  self.startFromButtonFunction)
         startFromButton.place(x=600, y=8)
 
-    def onError(self):
+    #Defining messageboxes
+    def onNoPlot(self):
         string = self.listOfPaths[self.i]
         string = string.replace(self.directory1, self.directory2)
         mbox.showerror("Error", "There is no plot {}".format(string))
 
-    def onError2(self):
+    def onEqualPath(self):
         mbox.showerror("Error", "The same paths")
 
     def onLastPicture(self):
@@ -85,16 +98,22 @@ class Window(Frame):
     def onFirstPicture(self):
         mbox.showinfo("First plot", "That is the first plot.")
 
+    # Defining buttons function
     def deleteButtonFunction(self):
-        result = mbox.askquestion("Delete", "Are You Sure?", icon='warning')
+        """
+        deleteButton functionality, deleting item from listbox.
+        """
+        result = mbox.askquestion("Delete",
+                                  "Delete highlighted item?",
+                                  icon='warning')
         if result == 'yes':
-            self.lb.delete(ANCHOR)
+            self.lb.delete(ANCHOR) #self.lb is listbox
         else:
             return None
 
     def startFromButtonFunction(self):
         """
-        Functionality startFromButton, from which chart program is starting.
+        startFromButton functionality, from which chart program is starting.
         """
         # Get value from entry
         a = int(self.startFromEntry.get()) - 1
@@ -107,7 +126,7 @@ class Window(Frame):
 
     def nextButtonFunction(self):
         """
-        Functionality nextButton, next picture is choosen.
+        nextButton functionality, next picture is choosen.
         """
         if self.i == self.lenght - 1:
             self.onLastPicture()
@@ -117,7 +136,7 @@ class Window(Frame):
 
     def previousButtonFunction(self):
         """
-        Functionality previousButton, previousPicture picture is choosen.
+        previousButton functionality, previousPicture picture is choosen.
         """
         if self.i == 0:
             self.onFirstPicture()
@@ -126,10 +145,21 @@ class Window(Frame):
             self.picture(self.i)
 
     def differentButtonFunction(self):
+        """
+        differentButton functionality.
+        """
         adr = self.listOfPaths[self.i]
         self.addToListbox(adr)
 
     def addToListbox(self, adr):
+        """
+        This function add path to listbox when charts are differentButton.
+
+        Parameters:
+        ----------
+        adr: str
+            Path to chart.
+        """
         try:
             if adr in self.lb.get(0, END):
                 return None
@@ -142,6 +172,11 @@ class Window(Frame):
         """
         This function creates three lables with pictures, first label show
         differences between pictures in next two labels.
+
+        Parameters:
+        ----------
+        adr: str
+            Path to chart.
         """
         adress_1 = self.listOfPaths[adr]
         adress_2 = adress_1.replace(self.directory1, self.directory2)
@@ -152,7 +187,7 @@ class Window(Frame):
         except FileNotFoundError:
             adr = self.listOfPaths[self.i]
             self.addToListbox(adr)
-            self.onError()
+            self.onNoPlot()
             return None
 
         self.fill_text_fields(adress_1, adress_2)
@@ -176,6 +211,17 @@ class Window(Frame):
         label3.place(x=1230, y=60)
 
     def fill_text_fields(self, adr_1, adr_2):
+        """
+        This function is added plots pathes to labels and added curent plot
+        number to label
+
+        Parameters:
+        ----------
+        adr_1: str
+            Path to chart.
+        adr_2: str
+             Path to chart.
+        """
         self.plot1PathText.config(state="normal")
         self.plot1PathText.delete("1.0", END)
         self.plot1PathText.insert(INSERT, adr_1)
@@ -185,6 +231,11 @@ class Window(Frame):
         self.plot2PathText.delete("1.0", END)
         self.plot2PathText.insert(INSERT, adr_2)
         self.plot1PathText.config(state="disabled")
+
+        self.currentPlotsText.config(state="normal")
+        self.currentPlotsText.delete("1.0", END)
+        self.currentPlotsText.insert(INSERT, self.i + 1)
+        self.currentPlotsText.config(state="disabled")
 
 
     def get_filepaths(self):
@@ -197,7 +248,7 @@ class Window(Frame):
         self.directory1 = self.path1.get()
         self.directory2 = self.path2.get()
         if self.directory1 == self.directory2:
-            self.onError2()
+            self.onEqualPath()
             return None
 
         file_paths = [] # List which will store all of the full filepaths.
@@ -213,7 +264,22 @@ class Window(Frame):
         self.listOfPaths = file_paths
         self.lenght = len(file_paths)
         self.picture(self.i)
-        print(self.lenght)
+        self.numberOfPlotsText.insert(INSERT, self.lenght)
+        self.numberOfPlotsText.config(state="disabled")
+
+    def saveToFile(self):
+        """
+        This function write to file all elemens from listbox to file.
+        """
+        pathList = self.lb.get(0, END)
+        currentPath = os.path.abspath(__file__)
+        pathToSave = currentPath.split("\\")
+        pathToSave[-1] = "path.txt"
+        pathToSave.pop(-2)
+        path = "\\".join(pathToSave)
+        with open(path, "w") as fp:
+            for item in pathList:
+                fp.write(item + "\n")
 
 def main():
 
@@ -223,11 +289,12 @@ def main():
 
     def onExit():
         if mbox.askyesno("Exit", "Do you want to quit the application?"):
+            app.saveToFile()
             root.destroy()
 
     root.protocol("WM_DELETE_WINDOW", onExit)
     root.mainloop()
-    
+
 
 
 if __name__ == '__main__':
